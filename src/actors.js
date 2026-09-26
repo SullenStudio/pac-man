@@ -14,7 +14,10 @@ import { floatText, drawGhostSprite } from "./ui.js";
 import { addScore, onPacDeath, triggerFright, startClear } from "./flow.js";
 
 const DIR_ANG = { "1,0": 0, "-1,0": 180, "0,1": 90, "0,-1": 270 };
-const DIRS = [vec2(1, 0), vec2(-1, 0), vec2(0, 1), vec2(0, -1)];
+
+function cardinalDirs() {
+  return [vec2(1, 0), vec2(-1, 0), vec2(0, 1), vec2(0, -1)];
+}
 
 function wrapTunnel(p) {
   if (p.x < -TILE / 2) p.x += COLS * TILE + TILE;
@@ -214,7 +217,7 @@ function gridMove(g, sp) {
     g.lastTy = cur.ty;
     const allowDoor = g.mode === "eyes";
     const opts = [];
-    for (const d of DIRS) {
+    for (const d of cardinalDirs()) {
       if (d.x === -g.dir.x && d.y === -g.dir.y) continue; // never reverse
       if (walkable(cur.tx + d.x, cur.ty + d.y, allowDoor)) opts.push(d);
     }
