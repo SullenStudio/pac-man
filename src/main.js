@@ -1,11 +1,19 @@
 // Pac-Man — Sullen Studio. Vite + Kaplay 3001, no external assets.
 import kaplay from "kaplay";
+import "./mobile.css";
 import { WIDTH, HEIGHT, G, COLORS, MODE_SCHEDULE } from "./state.js";
 import { buildLevel, tileCenterF } from "./maze.js";
 import { createPac, createGhosts, queueDir } from "./actors.js";
 import { createHUD, createTouchControls, setupSwipe, drawGhostSprite } from "./ui.js";
 import { resetPositions, spawnFruit } from "./flow.js";
 import { sfx, ensureAudio } from "./sfx.js";
+
+const phone =
+  window.matchMedia("(pointer: coarse)").matches ||
+  "ontouchstart" in window ||
+  navigator.maxTouchPoints > 0;
+if (phone) document.documentElement.classList.add("phone");
+G.touch = phone;
 
 kaplay({
   width: WIDTH,
@@ -14,6 +22,37 @@ kaplay({
   crisp: true,
   pixelDensity: Math.min(devicePixelRatio || 1, 2),
   background: COLORS.bg,
+  root: document.getElementById("game-wrap"),
+  touchToMouse: true,
+});
+
+function setScreen(name) {
+  document.documentElement.classList.toggle("menu", name === "menu");
+  document.documentElement.classList.toggle("over", name === "over");
+  document.documentElement.classList.toggle("play", name === "play");
+}
+
+const DIRS = {
+  left: () => vec2(-1, 0),
+  right: () => vec2(1, 0),
+  up: () => vec2(0, -1),
+  down: () => vec2(0, 1),
+};
+
+document.getElementById("dpad")?.addEventListener("pointerdown", (e) => {
+  const btn = e.target.closest("[data-dir]");
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  ensureAudio();
+  queueDir(DIRS[btn.dataset.dir]());
+});
+
+let playHandler = null;
+document.getElementById("btn-play")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  playHandler?.();
 });
 
 // ------------------------------------------------------------- global input
@@ -45,6 +84,9 @@ setupSwipe(queueDir);
 
 scene("menu", () => {
   G.phase = "menu";
+  setScreen("menu");
+  const playBtn = document.getElementById("btn-play");
+  if (playBtn) playBtn.textContent = "PLAY";
   let canStart = false;
   wait(0.4, () => { canStart = true; });
 
@@ -143,6 +185,7 @@ scene("menu", () => {
     sfx.start();
     go("game");
   }
+  playHandler = start;
   onKeyPress(["enter", "space"], start);
   onClick(start);
 });
@@ -150,6 +193,7 @@ scene("menu", () => {
 // -------------------------------------------------------------- game scene
 
 scene("game", () => {
+  setScreen("play");
   G.score = 0;
   G.lives = 3;
   G.level = 1;
@@ -238,6 +282,9 @@ scene("game", () => {
 
 scene("gameover", () => {
   G.phase = "gameover";
+  setScreen("over");
+  const playBtn = document.getElementById("btn-play");
+  if (playBtn) playBtn.textContent = "AGAIN";
   let canGo = false;
   wait(0.6, () => { canGo = true; });
 
@@ -291,8 +338,11 @@ scene("gameover", () => {
   function toMenu() {
     if (!canGo) return;
     canGo = false;
+    const playBtn = document.getElementById("btn-play");
+    if (playBtn) playBtn.textContent = "PLAY";
     go("menu");
   }
+  playHandler = toMenu;
   onKeyPress(["enter", "space"], toMenu);
   onClick(toMenu);
 });

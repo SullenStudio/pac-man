@@ -107,57 +107,16 @@ export function createHUD() {
 }
 
 // On-screen direction pad for touch devices (swipe also works everywhere).
-export function createTouchControls(queueDir) {
-  if (!G.touch) {
-    add([
-      text("ARROWS / WASD TO MOVE · M TO MUTE", { size: 10 }),
-      pos(WIDTH / 2, HEIGHT - PAD_H / 2),
-      anchor("center"),
-      color(90, 90, 130),
-      z(50),
-      "hud",
-    ]);
-    return;
-  }
-  const cx = WIDTH / 2;
-  const cy = HEIGHT - PAD_H / 2 + 4;
-  const S = 34;
-  const OFF = 38;
-  const dirs = [
-    [0, -1, vec2(0, -1)],
-    [0, 1, vec2(0, 1)],
-    [-1, 0, vec2(-1, 0)],
-    [1, 0, vec2(1, 0)],
-  ];
-  for (const [dx, dy, dir] of dirs) {
-    const b = add([
-      pos(cx + dx * OFF, cy + dy * OFF),
-      rect(S, S, { radius: 8 }),
-      anchor("center"),
-      color(70, 70, 140),
-      opacity(0.28),
-      area(),
-      z(55),
-      "pad",
-      { dir },
-    ]);
-    b.onDraw(() => {
-      const tip = dir.scale(8);
-      const back = dir.scale(-5);
-      const nrm = vec2(-dir.y, dir.x).scale(6);
-      drawPolygon({
-        pts: [tip, back.add(nrm), back.sub(nrm)],
-        color: rgb(200, 200, 255),
-        opacity: 0.9,
-      });
-    });
-    b.onClick(() => {
-      ensureAudio();
-      queueDir(dir);
-      b.opacity = 0.55;
-      wait(0.12, () => { b.opacity = 0.28; });
-    });
-  }
+export function createTouchControls() {
+  if (G.touch) return;
+  add([
+    text("ARROWS / WASD TO MOVE · M TO MUTE", { size: 10 }),
+    pos(WIDTH / 2, HEIGHT - PAD_H / 2),
+    anchor("center"),
+    color(90, 90, 130),
+    z(50),
+    "hud",
+  ]);
 }
 
 // Swipe anywhere to steer.
